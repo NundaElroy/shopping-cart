@@ -9,18 +9,18 @@ use CodeIgniter\RESTful\ResourceController;
 
 class ProductController extends ResourceController
 {   
-    protected $userModel;
+    protected $productModel;
 
     public function __construct()
     {
-        $this->userModel = new ProductModel();
+        $this->productModel = new ProductModel();
     }
 
     public function create()
     {
        
         //do some input validation 
-        if(!$this->validate($this->userModel->getValidationRules(),$this->userModel->getValidationMessages())){
+        if(!$this->validate($this->productModel->getValidationRules(),$this->productModel->getValidationMessages())){
             return $this->fail($this->validator->getErrors());
         }
 
@@ -28,7 +28,7 @@ class ProductController extends ResourceController
 
         //check if product exists 
         //model obj is returned is returned 
-        $check = $this->userModel->where('name',$productDetails['name'])->first();
+        $check = $this->productModel->where('name',$productDetails['name'])->first();
         if($check){
             $updateData = [
                 'product_id' => $check->getInsertID(), // Ensure correct product is updated
@@ -37,7 +37,7 @@ class ProductController extends ResourceController
             ];
 
              //save the product
-            if($this->userModel->save($updateData)){
+            if($this->productModel->save($updateData)){
                 return $this->respond($updateData,201,"product updated");
             } 
 
@@ -47,7 +47,7 @@ class ProductController extends ResourceController
         //incase the product is new 
 
          // Create a new product
-         if ($this->userModel->save($productDetails)) {
+         if ($this->productModel->save($productDetails)) {
             return $this->respondCreated($productDetails,"Product created successfully");
         }
 
@@ -56,7 +56,7 @@ class ProductController extends ResourceController
     }
 
     public function getAllProducts(){
-        $products = $this->userModel->findAll();
+        $products = $this->productModel->findAll();
         if($products){
             return $this->respond($products,200,"successful request");
         }
@@ -66,7 +66,7 @@ class ProductController extends ResourceController
     public function getProductById($id)
     {
         // Fetch the product by ID
-        $product = $this->userModel->find($id);
+        $product = $this->productModel->find($id);
 
         if ($product) {
             // Return product as JSON
