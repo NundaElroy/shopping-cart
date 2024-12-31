@@ -3,34 +3,20 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use CodeIgniter\Shield\Models\UserModel as ShieldUserModel;
 
-class UserModel extends Model
+class UserModel extends ShieldUserModel
 {
-    protected $table            = 'users';
-    protected $primaryKey       = 'user_id';
-    protected $useAutoIncrement = true;
-    protected $returnType       = 'array';
-    protected $useSoftDeletes   = false;
-    protected $protectFields    = true;
-    protected $allowedFields    = ['email','password'];
+    protected function initialize(): void
+    {
+        parent::initialize();
 
-    protected bool $allowEmptyInserts = false;
-    protected bool $updateOnlyChanged = true;
+        $this->allowedFields = [
+               ...$this->allowedFields,
+                    'email', // Added
+            
+        ]; 
 
-  
-
-    // Dates
-    protected $useTimestamps = false;
-          // If soft deletes are not used
-    
-   
-   
-
-    // Validation
-    protected $validationRules      = [];
-    protected $validationMessages   = [];
-    protected $skipValidation       = false;
-    protected $cleanValidationRules = true;
-
-   
+        // $this->allowedFields = array_merge($this->allowedFields, ['email']);
+    }
 }

@@ -27,9 +27,33 @@ class UserService{
             throw new ValidationException($this->validation->getErrors(),"could not register user");
         }
         //save details
-        $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
+        $data['password'] = password_hash($data['password'], PASSWORD_BCRYPT);
         $this->usermodel->insert($data);
         
         return $this->usermodel->find($this->usermodel->insertID());
    }
+
+   //validate user details
+   public function validateUser(array $credentials): bool
+   {
+       $email = $credentials['email'];
+       $password = $credentials['password'];
+   
+       // Retrieve the user by email
+       $user = $this->usermodel->where('email', $email)->first();
+   
+       // Check if user exists
+       if (! $user) {
+           return false; // User not found
+       }
+   
+       // Verify password
+       if (! password_verify($password, $user['password'])) {
+           return false; // Password mismatch
+       }
+   
+       // If validation passes
+       return true;
+   }
+   
 }
