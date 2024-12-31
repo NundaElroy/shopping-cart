@@ -4,6 +4,7 @@
 namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
+use CodeIgniter\Database\RawSql;
 
 class OrderItems extends Migration
 {
@@ -34,6 +35,10 @@ class OrderItems extends Migration
                 'type' => 'DECIMAL',
                 'constraint' => '10,2',
             ],
+            'updated_at' => [
+                'type' => 'TIMESTAMP',
+                'default' => new RawSql('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')
+            ]
         ]);
 
         // Primary Key

@@ -11,7 +11,7 @@ class User extends Migration
     {
         //defining the fields 
        $this->forge->addField([
-        'user_id'=>[
+        'id'=>[
             'type'=> 'INT',
             'auto_increment'=> true,
             'unsigned' => true
@@ -28,11 +28,15 @@ class User extends Migration
         'created_at' => [
              'type'    => 'TIMESTAMP',
              'default' => new RawSql('CURRENT_TIMESTAMP'),
-        ]
+        ],
+        'updated_at' => [
+          'type' => 'TIMESTAMP',
+          'default' => new RawSql('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')
+      ]
        ]);
 
        //primary key
-       $this->forge->addKey('user_id', true);
+       $this->forge->addKey('id', true);
        $this->forge->createTable('users',true);
 
 

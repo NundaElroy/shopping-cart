@@ -23,12 +23,17 @@ class Cart extends Migration
             'type' => 'TIMESTAMP',
             'default' => new RawSql('CURRENT_TIMESTAMP'),
         ]
+        ,
+         'updated_at' => [
+           'type' => 'TIMESTAMP',
+           'default' => new RawSql('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')
+       ]
     ]);
 
     $this->forge->addKey('cart_id', true); // Make cart_id the primary key
     
     // Add the foreign key relationship
-    $this->forge->addForeignKey('user_id', 'users', 'user_id', 'CASCADE', 'CASCADE');
+    $this->forge->addForeignKey('user_id', 'users', 'id', 'CASCADE', 'CASCADE');
     // Format: addForeignKey('field', 'reference_table', 'reference_field', 'on_delete', 'on_update')
 
     $this->forge->createTable('carts');
