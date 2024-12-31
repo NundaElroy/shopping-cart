@@ -6,6 +6,7 @@ namespace App\Controllers;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourceController;
 use App\Exceptions\ValidationException;
+use App\Models\UserModel;
 use App\Services\UserService;
 use CodeIgniter\Shield\Authentication\JWTManager;
 use CodeIgniter\Shield\Entities\User;
@@ -14,35 +15,14 @@ use CodeIgniter\Shield\Authentication\Passwords;
 class AuthController extends ResourceController
 {   
     protected $userService;
+    protected $userModel;
 
     public function __construct()
     {
         $this->userService = new UserService();
+        $this->userModel= new UserModel();
     }
-   // register user
-    // public function register()
-    // {  
-    //     try{
-    //         $data = $this->request->getJSON(true);
-    //         $user = $this->userService->createUser($data);
-
-    //         // Remove sensitive data from response
-    //         unset($user['password']);
-
-            
-    //         return $this->respondCreated($user,"user created successfuly");
-            
-
-    //     }catch(ValidationException $e){
-            
-        
-
-    //         return $this->fail($e, 400, null ,"user not created");
-
-    //     }
-
-    // }
-
+   
 
     public function register() {
         // Debug incoming request - prints raw JSON string to error log
@@ -166,11 +146,26 @@ class AuthController extends ResourceController
 
         /** @var JWTManager $manager */
         $manager = service('jwtmanager');
+        
+        $payload = [
+            'iss' => 'localhost', // Issuer
+            'iat' => time(),            // Issued At
+            'exp' => time() + 3600,     // Expiration Time (1 hour)
+            'sub' => auth()->id(),       // Subject (User ID)
+        ];
 
         // Generate JWT and return to client
-        $jwt = $manager->generateToken($user);
+        $jwt = $manager->generateToken($user,$payload);
+
+
+      
+
+       
+
+      
 
         return $this->respond([
+            'success' => 'successful login',
             'access_token' => $jwt,
         ]);
 }
