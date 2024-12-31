@@ -27,10 +27,7 @@ class CartController extends ResourceController
         //get user id for authenticated user 
          $userId = auth()->id();
          
-        ob_start(); // Start output buffering
-        var_dump($userId);
-        $userDebug = ob_get_clean(); // Get the output and clear the buffer
-        log_message('error', 'User entity before save (detailed): ' . $userDebug);
+       
          // Get or create cart
          $cart = $this->cartModel->where('user_id', $userId)->first();
         
@@ -39,32 +36,110 @@ class CartController extends ResourceController
              $cart = $this->cartModel->find($cartId);
          }
 
-         $builder = $this->cartItemModel->builder();
-         $builder->select('cart_items.*, products.*')
-                 ->join('products', 'products.product_id = cart_items.product_id')
-                 ->where('cart_items.cart_id', $cart['cart_id']);
-
-         $cartItems = $builder->get()->getResultArray();
-
-             // Format response
-        $response = [
-            'user_id' => $userId,
-            'cart_id' => $cart['cart_id'],
-            'items' => array_map(function($item) {
-                return [
-                    'cart_item_id' => $item['cart_item_id'],
-                    'product' => [
-                        'product_id' => $item['product_id'], // Changed to product_id
-                        'name' => $item['name'],
-                        'price' => $item['price'],
-                        // Add other product fields you need
-                    ],
-                    'quantity' => $item['quantity'],
-                    'created_at' => $item['created_at']
-                ];
-            }, $cartItems)
-        ];
+        $response = $this->createCartResponse($cart,$userId);
         return $this->respond($response);
+    }
+
+    //add item to cart 
+    public function addItemToCart(){
+
+
+        //validate input from user 
+        $rules = [
+            'id' => 'required|integer',
+            'quantity'=> 'required|integer|greater_than[0]'
+
+        ];
+
+        $productDetails = $this->request->getJSON(true);
+        
+        //validating user input 
+        if (! $this->validateData($productDetails, $rules, [])) {
+            return $this->fail(
+                ['errors' => $this->validator->getErrors()]
+                 
+            );
+        }
+
+        $product  = $this->productModel->where('product_id',$productDetails['id'])->first();
+
+        //check if exists
+        if(!$product){
+            return $this->fail(null,404,null,"product does not exist");
+        }
+        
+        //check if stock is sufficient
+        if($productDetails['quantity'] > $product['stock']){
+            return $this->fail(null,404,null,"product is than requires");
+        }
+
+
+        
+        //cart attached to user
+        //get user id for authenticated user 
+        $userId = auth()->id();
+        $cart = $this->cartModel->where('user_id', $userId)->first();
+
+        //insert into cart items
+        if(
+
+        !$this->cartItemModel->save([
+            'cart_id' => $cart['cart_id'], 
+            'product_id'=>$product['product_id'], 
+            'quantity' => $productDetails['quantity'] 
+        ])
+
+        ){
+            return $this->fail(null,400,null,"product not added to cart ");
+
+        }
+
+        $response = $this->createCartResponse( $cart, $userId);
+
+
+
+
+        return $this->respond($response);
+
+
+
+    }
+
+    /***
+     * @param $cart  arrary of cart
+     *      
+     * @param $userId id for the user
+     */
+
+    private function createCartResponse(array $cart,int $userId):mixed{
+
+        $builder = $this->cartItemModel->builder();
+        $builder->select('cart_items.*, products.*')
+                ->join('products', 'products.product_id = cart_items.product_id')
+                ->where('cart_items.cart_id', $cart['cart_id']);
+
+        $cartItems = $builder->get()->getResultArray();
+
+            // Format response
+
+      return $response = [
+           'user_id' => $userId,
+           'cart_id' => $cart['cart_id'],
+           'items' => array_map(function($item) {
+               return [
+                   'cart_item_id' => $item['cart_item_id'],
+                   'product' => [
+                       'product_id' => $item['product_id'], // Changed to product_id
+                       'name' => $item['name'],
+                       'price' => $item['price'],
+                       // Add other product fields you need
+                   ],
+                   'quantity' => $item['quantity'],
+                   'created_at' => $item['created_at']
+               ];
+           }, $cartItems)
+       ];
+        
     }
 
     

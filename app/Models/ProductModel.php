@@ -10,7 +10,7 @@ class ProductModel extends Model
     protected $primaryKey       = 'product_id';
     protected $useAutoIncrement = true;
     protected $allowedFields    = ['name','price','stock'];
-
+    protected $returnType      = 'array';
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;
 
