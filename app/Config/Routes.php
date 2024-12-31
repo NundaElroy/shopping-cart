@@ -16,3 +16,8 @@ $routes->post('/register', 'AuthController::register');
 // app/Config/Routes.php
 $routes->post('/auth/jwt', 'AuthController::login');
 
+//product routes
+$routes->post('/products', 'ProductController::create');
+$routes->get('/products', 'ProductController::getAllProducts');
+$routes->get('products/(:num)', 'ProductController::getProductById/$1');
+
