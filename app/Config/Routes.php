@@ -25,7 +25,7 @@ $routes->group('api/cart', ['filter' => 'jwt'], static function ($routes) {
     $routes->get('', 'CartController::getCart'); // GET /api/cart
     $routes->post('item', 'CartController::addItemToCart'); // POST /api/cart/item
     $routes->put('item/(:num)', 'CartController::editItem/$1'); // PUT /api/cart/item/{:num}
-    $routes->delete('items/(:num)', 'CartController::removeItem/$1'); // DELETE /api/cart/items/{:num}
+    $routes->delete('item/(:num)', 'CartController::removeItem/$1'); // DELETE /api/cart/items/{:num}
 });
 
 

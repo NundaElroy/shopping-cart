@@ -105,10 +105,11 @@ class CartController extends ResourceController
 
     }
 
-    /***
-     * @param $cart  arrary of cart
-     *      
+    /**
+     * @param array $cart  arrary of cart   
      * @param $userId id for the user
+     * @return custom response array 
+     * 
      */
 
     private function createCartResponse(array $cart,int $userId):mixed{
@@ -120,9 +121,9 @@ class CartController extends ResourceController
 
         $cartItems = $builder->get()->getResultArray();
 
-            // Format response
+            // Formatted response
 
-      return $response = [
+      return  [
            'user_id' => $userId,
            'cart_id' => $cart['cart_id'],
            'items' => array_map(function($item) {
@@ -142,5 +143,109 @@ class CartController extends ResourceController
         
     }
 
-    
+
+
+    /**
+     * Edit cart item quantity
+     * 
+     * @param int $cartItemId The ID of the cart item to edit
+     * @return ResponseInterface
+     */
+    public function editItem($cartItemId)
+    {
+        // Validate input
+        $rules = [
+            'quantity' => 'required|integer|greater_than[0]'
+        ];
+
+        $input = $this->request->getJSON(true);
+        
+        if (!$this->validateData($input, $rules)) {
+            return $this->fail(
+                ['errors' => $this->validator->getErrors()]
+            );
+        }
+
+        // Get user's cart
+        $userId = auth()->id();
+        $cart = $this->cartModel->where('user_id', $userId)->first();
+        
+        if (!$cart) {
+            return $this->fail(null, 404, null, "Cart not found");
+        }
+
+        // Get cart item and verify ownership
+        $cartItem = $this->cartItemModel->find($cartItemId);
+        
+        if (!$cartItem) {
+            return $this->fail(null, 404, null, "Cart item not found");
+        }
+        
+        if ($cartItem['cart_id'] !== $cart['cart_id']) {
+            return $this->fail(null, 403, null, "Unauthorized access to cart item");
+        }
+
+        // Check product stock
+        $product = $this->productModel->where('product_id', $cartItem['product_id'])->first();
+        
+        if (!$product) {
+            return $this->fail(null, 404, null, "Product no longer exists");
+        }
+
+        if ($input['quantity'] > $product['stock']) {
+            return $this->fail(null, 400, null, "Requested quantity exceeds available stock");
+        }
+
+        // Update cart item
+        if (!$this->cartItemModel->update($cartItemId, [
+            'quantity' => $input['quantity']
+        ])) {
+            return $this->fail(null, 500, null, "Failed to update cart item");
+        }
+
+        // Return updated cart
+        $response = $this->createCartResponse($cart, $userId);
+        return $this->respond($response);
+    }
+
+    /**
+     * Remove item from cart
+     * 
+     * @param int $cartItemId The ID of the cart item to remove
+     * @return ResponseInterface
+     */
+    public function removeItem($cartItemId)
+    {
+        // Get user's cart
+        $userId = auth()->id();
+        
+        $cart = $this->cartModel->where('user_id', $userId)->first();
+        
+        if (!$cart) {
+            return $this->fail(null, 404, null, "Cart not found");
+        }
+
+        // Get cart item and verify ownership
+        $cartItem = $this->cartItemModel->find($cartItemId);
+        
+        if (!$cartItem) {
+            return $this->fail(null, 404, null, "Cart item not found");
+        }
+        
+        if ($cartItem['cart_id'] !== $cart['cart_id']) {
+            return $this->fail(null, 403, null, "Unauthorized access to cart item");
+        }
+
+        // Remove cart item
+        if (!$this->cartItemModel->delete($cartItemId)) {
+            return $this->fail(null, 500, null, "Failed to remove cart item");
+        }
+
+        // Return updated cart
+        $response = $this->createCartResponse($cart, $userId);
+        return $this->respond($response);
+    }
 }
+
+    
+
